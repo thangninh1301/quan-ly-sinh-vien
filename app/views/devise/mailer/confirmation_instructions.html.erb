@@ -1,0 +1,10 @@
+<div class="content" style="text-align: center;">
+  <br>
+  <img src="<%= attachments['logo.png'].url %>" width="100px">
+
+  <p><%= @email %>様、Kindyへようこそ!</p>
+
+  <p>以下のリンクをクリックし、メールアドレスの確認手続を完了させてください。</p>
+
+  <p><%= link_to t('.confirm_account_link'), @resource.generate_confirmation_link(@token, message) %></p>
+</div>

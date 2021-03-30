@@ -1,0 +1,7 @@
+deployer: "obito"
+servers:
+  front:
+    - "localhost"
+  worker:
+    - "localhost"
+notifier: "ruby /Users/obito/Projects/BUNBU/skeleton/notifier.rb"

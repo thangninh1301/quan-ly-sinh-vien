@@ -1,0 +1,165 @@
+require:
+  - rubocop-performance
+  - rubocop-rails
+
+AllCops:
+  TargetRubyVersion: 2.5
+  # RuboCop has a bunch of cops enabled by default. This setting tells RuboCop
+  # to ignore them, so only the ones explicitly set in this file are enabled.
+  DisabledByDefault: true
+  Exclude:
+    - 'db/schema.rb'
+    - 'vendor/**/*'
+    - '**/tmp/**/*'
+    - '**/templates/**/*'
+    - '**/vendor/**/*'
+    - 'actionpack/lib/action_dispatch/journey/parser.rb'
+    - 'railties/test/fixtures/tmp/**/*'
+    - 'actionmailbox/test/dummy/**/*'
+    - 'actiontext/test/dummy/**/*'
+    - '**/node_modules/**/*'
+    - 'config/**/*'
+    - 'bin/**/*'
+    - 'public/**/*'
+    - 'tmp/**/*'
+    - 'log/**/*'
+    - 'test/**/*'
+
+Performance:
+  Exclude:
+    - '**/test/**/*'
+
+Rails:
+  Enabled: true
+
+############################# Style #############################
+
+# 日本語のコメントを許可する
+Style/AsciiComments:
+  Enabled: false
+
+# spec ファイルでは {} ブロックを複数行で書くのを許可する
+Style/BlockDelimiters:
+  Exclude:
+    - 'spec/**/*'
+
+# 一部のファイルについてはクラスに関する説明不用
+Style/Documentation:
+  Enabled: false
+  Exclude:
+    - 'db/migrate/*'
+    - 'config/application.rb'
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Style/MutableConstant:
+  Enabled: false
+
+Style/RedundantReturn:
+  Enabled: false
+
+# 文字列はダブルクォートで囲む
+Style/StringLiterals:
+  Enabled: false
+  EnforcedStyle: double_quotes
+
+# 要素数が3個以内の文字列配列については %w %W を使わない宣言を許可する
+Style/WordArray:
+  MinSize: 3
+
+############################# Lint #############################
+
+############################# Metrics #############################
+
+Metrics/AbcSize:
+  Max: 100
+  Exclude:
+
+# メソッドの循環的複雑度は 20 まで許容
+Metrics/CyclomaticComplexity:
+  Max: 20
+  Exclude:
+
+# メソッドの複雑度は 20 まで許可
+Metrics/PerceivedComplexity:
+  Max: 20
+  Exclude:
+
+# ネストは5段まで許可
+Metrics/BlockNesting:
+  Max: 5
+
+# 1行の最大文字数は160文字
+Layout/LineLength:
+  Max: 160
+
+# メソッドの最大行数は100行
+Metrics/MethodLength:
+  Max: 100
+
+# クラスの最大行数は500行
+Metrics/ClassLength:
+  Max: 500
+  Exclude:
+
+# モジュールの最大行数は500行
+Metrics/ModuleLength:
+  Max: 500
+
+# spec ファイルでは1ブロック25行を超えることを許可する
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/**/*'
+
+############################# Naming #############################
+
+# has_ から始まるメソッドを許可する
+Naming/PredicateName:
+  ForbiddenPrefixes:
+    - "is_"
+    - "have_"
+  NamePrefix:
+    - "is_"
+    - "have_"
+
+############################# Layout #############################
+
+Layout/SpaceBeforeFirstArg:
+  Exclude:
+    - 'db/migrate/*.rb'
+
+# 複数行にわたるメソッドのインデントチェックを無効化する
+Layout/MultilineOperationIndentation:
+  Enabled: false
+
+Rails/ActiveRecordCallbacksOrder: # (new in 2.7)
+  Enabled: true
+Rails/AfterCommitOverride: # (new in 2.8)
+  Enabled: true
+Rails/FindById: # (new in 2.7)
+  Enabled: true
+Rails/Inquiry: # (new in 2.7)
+  Enabled: true
+Rails/MailerName: # (new in 2.7)
+  Enabled: true
+Rails/MatchRoute: # (new in 2.7)
+  Enabled: true
+Rails/NegateInclude: # (new in 2.7)
+  Enabled: true
+Rails/Pluck: # (new in 2.7)
+  Enabled: true
+Rails/PluckInWhere: # (new in 2.7)
+  Enabled: true
+Rails/RenderInline: # (new in 2.7)
+  Enabled: true
+Rails/RenderPlainText: # (new in 2.7)
+  Enabled: true
+Rails/ShortI18n: # (new in 2.7)
+  Enabled: true
+Rails/SquishedSQLHeredocs: # (new in 2.8)
+  Enabled: true
+Rails/WhereExists: # (new in 2.7)
+  Enabled: true
+Rails/WhereNot: # (new in 2.8)
+  Enabled: true

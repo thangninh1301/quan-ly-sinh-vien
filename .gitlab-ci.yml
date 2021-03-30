@@ -1,0 +1,38 @@
+image: "ruby:2.7.1"
+
+services:
+  - mysql:5.7
+  - redis:latest
+
+variables:
+  MYSQL_DATABASE: ci-test
+  MYSQL_ROOT_PASSWORD: skeleton
+  BUNDLER_VERSION: 2.1.4
+
+cache:
+  paths:
+    - vendor/ruby
+
+before_script:
+  - apt update >/dev/null
+  - apt install -y locales >/dev/null
+  - echo "en_US UTF-8" > /etc/locale.gen
+  - locale-gen en_US.UTF-8
+  - export LANG=en_US.UTF-8
+  - export LANGUAGE=en_US:en
+  - export LC_ALL=en_US.UTF-8
+  - gem install bundler -v 2.1.4
+  - bundle install -j $(nproc) --path vendor
+
+rspec:
+  script:
+    # Check commit format
+    - git fetch origin develop
+    - ruby .circleci/commit_format_validator.rb
+    # Rubocop
+    - bundle exec rubocop
+    # Rspec
+    - cp config/application.yml.example config/application.yml
+    - mv config/database-gitlab.ci.yml config/database.yml
+    - RAILS_ENV=test bundle exec rake db:schema:load --trace
+    - RAILS_ENV=test bundle exec rspec

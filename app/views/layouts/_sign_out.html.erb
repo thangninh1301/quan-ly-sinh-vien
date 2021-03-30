@@ -1,0 +1,5 @@
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-logout">
+  logout
+</button>
+<%= render 'layouts/delete_modal', title: t('modals.titles.logout_confirmation'), id: 'modal-logout',
+           body: t("modals.contents.logout_confirmation"), path: destroy_user_session_path %>

@@ -1,0 +1,8 @@
+test:
+  adapter: mysql2
+  database: ci-test
+  username: root
+  password: skeleton
+  encoding: utf8
+  host: mysql
+  port: 3306

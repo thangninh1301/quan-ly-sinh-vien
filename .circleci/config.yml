@@ -1,0 +1,233 @@
+# Ruby CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-ruby/ for more details
+#
+defaults: &defaults
+
+  # 作業ディレクトリ
+  working_directory: ~/circleci-
+
+  # Docker イメージ
+  docker:
+
+    # Ruby
+    - image: ruby:2.7.1
+      environment:
+        LANG: C.UTF-8
+        TZ: 'usr/share/zoneinfo/Asia/Tokyo' # TIMEZONEを設定
+        DB_HOST: 127.0.0.1
+        DB_USERNAME: 'root'
+        DB_PASSWORD: ''
+        REDIS_HOST: 127.0.0.1
+        RAILS_ENV: 'test'
+        BUNDLER_VERSION: 2.1.4
+
+    # MySQL
+    - image: mysql:5.7
+      command: [--default-storage-engine=innodb, --innodb-file-format=Barracuda, --innodb_file_per_table=true, --innodb-large-prefix=true, --innodb_ft_min_token_size=1, --ft_min_word_len=1, --log-error]
+      environment:
+        MYSQL_USER: root
+        MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+        MYSQL_ROOT_PASSWORD: ''
+        MYSQL_ROOT_HOST: '%'
+        TZ: '/usr/share/zoneinfo/Asia/Tokyo' # TIMEZONEを設定
+
+    # Redis
+    - image: redis
+      environment:
+        TZ: 'usr/share/zoneinfo/Asia/Tokyo' # TIMEZONEを設定
+
+  environment:
+    TZ: '/usr/share/zoneinfo/Asia/Tokyo' # TIMEZONEを設定
+
+version: 2
+jobs:
+  build:
+
+    <<: *defaults
+
+    steps:
+  
+      - checkout
+
+      - attach_workspace:
+          at: ~/circleci-skeleton
+
+      # キャッシュのリストア
+      - restore_cache:
+          keys:
+            - skeleton-{{ checksum "Gemfile.lock" }}
+
+      # bundle 2.0.1 install
+      - run:
+          name: Install bundle 2.1.4
+          command: |
+            gem update --system
+            gem install bundler -v 2.1.4
+
+      # gem インストール
+      - run:
+          name: Bundle install
+          command: bundle install --path vendor/bundle
+
+      # キャッシュの保存
+      - save_cache:
+          key: skeleton-{{ checksum "Gemfile.lock" }}
+          paths:
+            - vendor/bundle
+
+      # 共有フォルダの設定
+      - persist_to_workspace:
+          root: ~/circleci-skeleton
+          paths:
+            - .
+  # Rubocop スタイル チェック
+  code_analyze:
+
+    <<: *defaults
+
+    steps:
+
+      - checkout
+
+      # ワークスペースのアタッチ
+      - attach_workspace:
+          at: ~/circleci-skeleton
+
+      # キャッシュのリストア
+      - restore_cache:
+          keys:
+            - skeleton-{{ checksum "Gemfile.lock" }}
+            - skeleton-
+      - run:
+          name: Install bundle 2.1.4
+          command: |
+            gem update --system
+            gem install bundler -v 2.1.4
+
+      # gem インストール
+      - run: bundle install --path vendor/bundle
+
+      #  RuboCop 実行
+      - run:
+          name: RuboCop Style Check
+          command: bundle exec rubocop
+  # commit validator
+  check_commit:
+    <<: *defaults
+
+    steps:
+      - checkout
+      - run: ruby .circleci/commit_format_validator.rb
+
+  # RSpec テスト
+  rspec_test:
+
+    parallelism: 1
+
+    <<: *defaults
+
+    steps:
+
+      - checkout
+
+      # ワークスペースのアタッチ
+      - attach_workspace:
+          at: ~/circleci-skeleton
+
+      # キャッシュのリストア
+      - restore_cache:
+          keys:
+            - skeleton-{{ checksum "Gemfile.lock" }}
+            - skeleton-
+
+      - run:
+          name: Install bundle 2.1.4
+          command: |
+            gem update --system
+            gem install bundler -v 2.1.4
+
+      # gem インストール
+      - run: bundle install --path vendor/bundle
+
+      # DB周りのパッケージインストール
+      - run: apt update -qq
+      - run: apt install -y software-properties-common
+      - run: add-apt-repository "deb http://ppa.launchpad.net/ondrej/mysql-experimental/ubuntu precise main"
+      - run: apt install -y jq
+      - run: apt install -y mysql-client
+
+      # 設定ファイルのコピー
+      - run: cp config/application.yml.example config/application.yml
+      - run: mv config/database.ci.yml config/database.yml
+
+      # dockerizeのインストール
+      - run:
+          name: Install dockerize
+          command: wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && tar -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+          environment:
+            DOCKERIZE_VERSION: v0.5.0
+
+      # DBの応答待機
+      - run:
+          name: Wait for db
+          command: ./dockerize -wait tcp://localhost:3306 -timeout 20s
+
+      # DB初期化
+      - run:
+          name: init Database
+          command: |
+            RAILS_ENV=test DB_YAML=config/database.yml bundle exec rake db:create
+            RAILS_ENV=test bundle exec rake db:schema:load --trace
+
+      # Rspec 実行
+      - run:
+          name: Run rspec in parallel
+          command: |
+            mkdir /tmp/test-results
+            bundle exec rspec --profile 10 \
+                              --format RspecJunitFormatter \
+                              --out /tmp/test-results/rspec.xml \
+                              --format progress \
+                              $(circleci tests glob "spec/**/*_spec.rb" | circleci tests split --split-by=timings)
+
+      # テスト結果の保存先
+      # collect reports
+      - store_test_results:
+          path: /tmp/test-results/
+      - store_artifacts:
+          path: /tmp/test-results/
+          destination: test-results
+workflows:
+  version: 2
+  build_test:
+    jobs:
+
+      - build:
+          filters:
+            branches:
+              ignore:
+                - /^wip\/.*/
+                - /^deploy\/.*/
+                - /^infra\/.*/
+      - code_analyze:
+          filters:
+            branches:
+              ignore:
+                - /^wip\/.*/
+                - /^deploy\/.*/
+                - /^infra\/.*/
+      - check_commit:
+          filters:
+            branches:
+              ignore:
+                - /^wip\/.*/
+                - /^deploy\/.*/
+                - /^infra\/.*/
+      - rspec_test:
+          filters:
+            branches:
+              ignore:
+                - /^wip\/.*/
+                - /^deploy\/.*/
+                - /^infra\/.*/

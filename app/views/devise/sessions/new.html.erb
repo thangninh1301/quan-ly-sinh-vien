@@ -1,0 +1,30 @@
+<div id="all-view" class="">
+  <%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
+    <div class="login-box">
+      <div class="header">
+        <div class="logo" style="background-image: url(<%= asset_path 'logo.png' %>)"></div>
+        <div class="school-name">飛翔学舎</div>
+      </div>
+      <div class="field">
+        <%= f.label :email, class: "title" %><br/>
+        <%= f.email_field :email, autofocus: true, required: true %>
+      </div>
+      <div class="field">
+        <%= f.label :password, class: "title" %><br/>
+        <%= f.password_field :password, autocomplete: "current-password", required: true %>
+      </div>
+      <% if devise_mapping.rememberable? -%>
+        <%= f.hidden_field :remember_me, value: 1 %>
+      <% end -%>
+      <% flash.each do |key, value| %>
+        <div class="box-input-error" style="display: block;">
+          <i class="fa fa-exclamation-triangle"></i>
+          <span><%= value %></span>
+        </div>
+      <% end %>
+      <div class="button">
+        <%= f.button t("devise.sessions.log_in"), data: { disable_with: "<i class='fa fa-spinner fa-spin'></i>" } %>
+      </div>
+    </div>
+  <% end %>
+</div>

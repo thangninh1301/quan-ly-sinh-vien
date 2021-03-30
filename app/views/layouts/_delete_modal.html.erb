@@ -1,0 +1,20 @@
+<div class="modal fade" id="<%= id %>" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="formtop-title">
+          <h5 class="confirm-title"><%= title %></h5>
+        </div>
+      </div>
+      <div class="modal-body">
+        <%= body %>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal"><%= t('modals.dismiss') %></button>
+        <%= button_to t('modals.confirm'), path, type: "button", class: "btn btn-primary", method: :delete,
+                      form: { style: 'display:inline-block;' },
+                      data: { disable_with: "#{t('modals.please_wait')} ..." } %>
+      </div>
+    </div>
+  </div>
+</div>
